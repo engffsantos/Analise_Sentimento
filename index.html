@@ -1,151 +1,29 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chat com Análise de Sentimento</title>
-<style>
-    body {
-        font-family: Arial, sans-serif;
-        background-color: #f0f0f0;
-        padding: 20px;
-    }
-    .chat-container {
-        max-width: 600px;
-        margin: 0 auto;
-        background-color: #fff;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-    .chat-message {
-        background-color: #f1f0f0;
-        padding: 10px;
-        margin: 10px 0;
-        border-radius: 6px;
-        position: relative; /* Para alinhar o ícone */
-        padding-left: 40px; /* Espaço para o ícone */
-    }
-    .user-message {
-        background-color: #d3e3fc;
-        align-self: flex-end;
-    }
-    .sentiment-icon {
-        position: absolute;
-        left: 10px; /* Alinhar à esquerda do bloco de mensagem */
-        top: 50%;
-        transform: translateY(-50%);
-        width: 24px;
-        height: 24px;
-    }
-    .positive-icon {
-        background-color: #28a745;
-        border-radius: 50%;
-    }
-    .negative-icon {
-        background-color: #dc3545;
-        border-radius: 50%;
-    }
-
-    .chat-form {
-        display: flex;
-        margin-top: 20px;
-    }
-    .chat-form input[type="text"] {
-        flex: 1;
-        padding: 10px;
-        font-size: 16px;
-        border: 1px solid #ccc;
-        border-radius: 4px 0 0 4px;
-        outline: none;
-    }
-    .chat-form button {
-        padding: 10px 20px;
-        font-size: 16px;
-        border: 1px solid #007bff;
-        background-color: #007bff;
-        color: #fff;
-        border-radius: 0 4px 4px 0;
-        cursor: pointer;
-        outline: none;
-    }
-    .chat-form button:hover {
-        background-color: #0056b3;
-    }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detector de Sentimentos</title>
 </head>
 <body>
-<div class="chat-container">
-    <div class="chat-message user-message">
-        Olá! Digite uma mensagem.
-    </div>
-    <div id="chat-messages"></div>
-    <form id="message-form" class="chat-form">
-        <input type="text" id="user-input" placeholder="Digite sua mensagem...">
-        <button type="submit">Enviar</button>
-    </form>
-</div>
+    <h1>Detector de Sentimentos</h1>
+    <textarea id="input-text" rows="4" cols="50"></textarea><br><br>
+    <button onclick="classifySentiment()">Detectar Sentimento</button><br><br>
+    <p id="result"></p>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-<!-- Inclua o script da biblioteca Sentiment.js -->
-<script src="https://cdn.jsdelivr.net/npm/sentiment@5.0.2/lib/index.min.js"></script>
-
-<script>
-    var Sentiment = require('sentiment');
-    const sentiment = new Sentiment();
-    const chatMessages = document.getElementById('chat-messages');
-    const messageForm = document.getElementById('message-form');
-    const userInput = document.getElementById('user-input');
-
-    messageForm.addEventListener('submit', function(event) {
-        event.preventDefault();
-
-        const userMessage = userInput.value.trim();
-        if (userMessage !== '') {
-            const result = sentiment.analyze(userMessage);
-            const sentimentClass = getSentimentClass(result.score);
-
-            appendMessage('user', userMessage, sentimentClass);
-            userInput.value = '';
+    <script>
+        async function classifySentiment() {
+            const text = document.getElementById('input-text').value;
+            const response = await fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text: text })
+            });
+            const data = await response.json();
+            document.getElementById('result').innerText = `Sentimento: ${data.sentiment}`;
         }
-    });
-
-    function appendMessage(sender, message, sentimentClass) {
-        const messageElement = document.createElement('div');
-        messageElement.classList.add('chat-message');
-        messageElement.classList.add(sender + '-message');
-
-        const iconElement = document.createElement('div');
-        iconElement.classList.add('sentiment-icon');
-        if (sentimentClass === 'positive') {
-            iconElement.classList.add('positive-icon');
-        } else if (sentimentClass === 'negative') {
-            iconElement.classList.add('negative-icon');
-        } else {
-            iconElement.classList.add('neutral-icon');
-        }
-
-        messageElement.appendChild(iconElement);
-
-        const textElement = document.createElement('div');
-        textElement.textContent = message;
-        messageElement.appendChild(textElement);
-
-        chatMessages.appendChild(messageElement);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-
-    function getSentimentClass(score) {
-        if (score > 0) {
-            return 'positive';
-        } else if (score < 0) {
-            return 'negative';
-        } else {
-            return 'neutral';
-        }
-    }
-</script>
-
+    </script>
 </body>
 </html>
